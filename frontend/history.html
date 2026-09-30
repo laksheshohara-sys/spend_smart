@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction History — SpendSmart</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .filters {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 24px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr auto;
+            gap: 14px;
+            align-items: end;
+        }
+
+        .tx-table-wrapper {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            padding: 14px 16px;
+            text-align: left;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text3);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg2);
+        }
+
+        thead th.sortable { cursor: pointer; user-select: none; }
+        thead th.sortable:hover { color: var(--text); }
+
+        tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: var(--transition);
+        }
+
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: var(--bg3); }
+
+        tbody td { padding: 14px 16px; font-size: 0.9rem; vertical-align: middle; }
+
+        .cat-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 100px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .amount-cell { font-family: var(--font-head); font-weight: 700; color: var(--red); }
+
+        .delete-btn {
+            background: none; border: none;
+            color: var(--text3); cursor: pointer;
+            padding: 6px; border-radius: 6px;
+            transition: var(--transition); font-size: 0.9rem;
+        }
+        .delete-btn:hover { color: var(--red); background: rgba(239,68,68,0.1); }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .page-btn {
+            padding: 8px 14px;
+            border-radius: var(--radius-sm);
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            color: var(--text2);
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: var(--transition);
+        }
+        .page-btn:hover, .page-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .summary-bar {
+            display: flex;
+            gap: 24px;
+            padding: 14px 20px;
+            background: var(--bg2);
+            border-bottom: 1px solid var(--border);
+            font-size: 0.88rem;
+        }
+
+        .summary-bar span { color: var(--text3); }
+        .summary-bar strong { font-family: var(--font-head); }
+
+        @media (max-width: 900px) {
+            .filters { grid-template-columns: 1fr 1fr; }
+            table { display: block; overflow-x: auto; }
+        }
+    </style>
+</head>
+<body>
+    <script src="utils/api.js"></script>
+    <script src="components/navbar.js"></script>
+    <script>
+        requireAuth();
+        renderNavbar('history');
+    </script>
+
+    <div class="page-wrapper">
+        <div class="dashboard-header fade-in">
+            <div>
+                <h1 style="font-size:1.8rem;">📜 Transaction History</h1>
+                <p style="color:var(--text2);margin-top:4px;">Browse, filter, and manage all your expenses</p>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters fade-in-2">
+            <div class="form-group">
+                <label>Category</label>
+                <select id="filter-cat" class="input" onchange="applyFilters()">
+                    <option value="">All Categories</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>From Date</label>
+                <input type="date" id="filter-from" class="input" onchange="applyFilters()">
+            </div>
+            <div class="form-group">
+                <label>To Date</label>
+                <input type="date" id="filter-to" class="input" onchange="applyFilters()">
+            </div>
+            <div class="form-group">
+                <label>Search</label>
+                <input type="text" id="filter-search" class="input" placeholder="Search title…" oninput="applyFilters()">
+            </div>
+            <div class="form-group">
+                <label>&nbsp;</label>
+                <button class="btn btn-ghost btn-full" onclick="clearFilters()">Clear</button>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="tx-table-wrapper fade-in-3">
+            <div class="summary-bar">
+                <div><span>Showing </span><strong id="shown-count">—</strong><span> transactions</span></div>
+                <div><span>Total: </span><strong id="shown-total" class="text-red">—</strong></div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th class="sortable" onclick="sortBy('date')">Date ↕</th>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Note</th>
+                        <th class="sortable" onclick="sortBy('amount')">Amount ↕</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="tx-tbody">
+                    <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text3);">Loading…</td></tr>
+                </tbody>
+            </table>
+            <div class="pagination" id="pagination"></div>
+        </div>
+    </div>
+
+    <script>
+        let allExpenses = [];
+        let filtered    = [];
+        let sortField   = 'date';
+        let sortDir     = -1; // -1 = desc
+        const PAGE_SIZE = 20;
+        let page = 1;
+
+        async function init() {
+            // Load categories
+            const { categories } = await Expenses.getCategories();
+            const sel = document.getElementById('filter-cat');
+            categories.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = `${c.icon} ${c.name}`;
+                sel.appendChild(opt);
+            });
+
+            // Set default date range to current month
+            const now = new Date();
+            const ms = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+            document.getElementById('filter-from').value = ms;
+            document.getElementById('filter-to').value   = now.toISOString().split('T')[0];
+
+            await loadExpenses();
+        }
+
+        async function loadExpenses() {
+            try {
+                const { expenses } = await Expenses.getAll({ limit: 500 });
+                allExpenses = expenses;
+                applyFilters();
+            } catch (err) {
+                showToast('Failed to load: ' + err.message, 'error');
+            }
+        }
+
+        function applyFilters() {
+            const cat    = document.getElementById('filter-cat').value;
+            const from   = document.getElementById('filter-from').value;
+            const to     = document.getElementById('filter-to').value;
+            const search = document.getElementById('filter-search').value.toLowerCase();
+
+            filtered = allExpenses.filter(e => {
+                if (cat    && e.category_id != cat)          return false;
+                if (from   && e.date < from)                 return false;
+                if (to     && e.date > to)                   return false;
+                if (search && !e.title.toLowerCase().includes(search)) return false;
+                return true;
+            });
+
+            sortExpenses();
+            page = 1;
+            render();
+        }
+
+        function sortBy(field) {
+            if (sortField === field) sortDir *= -1;
+            else { sortField = field; sortDir = -1; }
+            sortExpenses();
+            render();
+        }
+
+        function sortExpenses() {
+            filtered.sort((a, b) => {
+                const va = a[sortField]; const vb = b[sortField];
+                if (va < vb) return -1 * sortDir;
+                if (va > vb) return  1 * sortDir;
+                return 0;
+            });
+        }
+
+        function render() {
+            const start = (page - 1) * PAGE_SIZE;
+            const slice = filtered.slice(start, start + PAGE_SIZE);
+            const total = filtered.reduce((s, e) => s + e.amount, 0);
+
+            document.getElementById('shown-count').textContent = filtered.length;
+            document.getElementById('shown-total').textContent = formatCurrency(total);
+
+            const tbody = document.getElementById('tx-tbody');
+            if (!filtered.length) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:48px;color:var(--text3);">No transactions found.</td></tr>`;
+                document.getElementById('pagination').innerHTML = '';
+                return;
+            }
+
+            tbody.innerHTML = slice.map((e, i) => `
+                <tr id="row-${e.id}">
+                    <td style="color:var(--text3);font-size:0.8rem;">${start + i + 1}</td>
+                    <td style="white-space:nowrap;">${formatDate(e.date)}</td>
+                    <td style="font-weight:500;">${e.title}</td>
+                    <td>
+                        <span class="cat-chip" style="background:${e.category_color}22;color:${e.category_color}">
+                            ${e.category_icon} ${e.category_name}
+                        </span>
+                    </td>
+                    <td style="color:var(--text3);font-size:0.85rem;">${e.note || '—'}</td>
+                    <td class="amount-cell">−${formatCurrency(e.amount)}</td>
+                    <td>
+                        <button class="delete-btn" onclick="deleteRow(${e.id})" title="Delete">🗑</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            renderPagination();
+        }
+
+        function renderPagination() {
+            const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+            if (totalPages <= 1) { document.getElementById('pagination').innerHTML = ''; return; }
+
+            let html = `<button class="page-btn" onclick="goPage(${page-1})" ${page===1?'disabled':''}>‹</button>`;
+            for (let p = 1; p <= totalPages; p++) {
+                html += `<button class="page-btn ${p===page?'active':''}" onclick="goPage(${p})">${p}</button>`;
+            }
+            html += `<button class="page-btn" onclick="goPage(${page+1})" ${page===totalPages?'disabled':''}>›</button>`;
+            document.getElementById('pagination').innerHTML = html;
+        }
+
+        function goPage(p) {
+            const total = Math.ceil(filtered.length / PAGE_SIZE);
+            if (p < 1 || p > total) return;
+            page = p;
+            render();
+        }
+
+        async function deleteRow(id) {
+            if (!confirm('Delete this expense?')) return;
+            try {
+                await Expenses.remove(id);
+                allExpenses = allExpenses.filter(e => e.id !== id);
+                applyFilters();
+                showToast('Deleted.', 'info');
+            } catch (err) {
+                showToast('Delete failed: ' + err.message, 'error');
+            }
+        }
+
+        function clearFilters() {
+            document.getElementById('filter-cat').value    = '';
+            document.getElementById('filter-from').value   = '';
+            document.getElementById('filter-to').value     = '';
+            document.getElementById('filter-search').value = '';
+            applyFilters();
+        }
+
+        function exportCSV() {
+            if (!filtered.length) { showToast('No data to export.', 'error'); return; }
+            const rows = [['#','Date','Title','Category','Note','Amount']];
+            filtered.forEach((e, i) => rows.push([
+                i+1, e.date, e.title, e.category_name, e.note || '', e.amount
+            ]));
+            const csv  = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement('a');
+            a.href     = url;
+            a.download = `SpendSmart_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('CSV exported!', 'success');
+        }
+
+        init();
+    </script>
+</body>
+</html>

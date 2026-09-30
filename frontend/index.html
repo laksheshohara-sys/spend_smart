@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpendSmart — Smart Expense Tracker</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        /* ── Hero ──────────────────────────────────────────── */
+        .hero {
+            min-height: calc(100vh - 64px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 60px 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-bg {
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 50% -10%, rgba(108,99,255,0.25) 0%, transparent 65%),
+                radial-gradient(ellipse 50% 40% at 80% 80%, rgba(16,185,129,0.12) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .hero-content { position: relative; z-index: 1; max-width: 760px; }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(108,99,255,0.12);
+            border: 1px solid rgba(108,99,255,0.3);
+            border-radius: 100px;
+            padding: 6px 16px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--accent2);
+            margin-bottom: 28px;
+            letter-spacing: 0.05em;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            line-height: 1.08;
+            margin-bottom: 20px;
+            letter-spacing: -0.02em;
+        }
+
+        .hero h1 .highlight {
+            background: linear-gradient(135deg, var(--accent2), #a78bfa, var(--green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.15rem;
+            color: var(--text2);
+            line-height: 1.7;
+            max-width: 520px;
+            margin: 0 auto 40px;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* ── Feature strip ─────────────────────────────────── */
+        .features {
+            background: var(--bg2);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            padding: 80px 24px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 28px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px;
+            transition: var(--transition);
+        }
+
+        .feature-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-4px);
+            box-shadow: 0 16px 40px rgba(108,99,255,0.15);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .feature-card h3 {
+            font-size: 1.05rem;
+            margin-bottom: 10px;
+        }
+
+        .feature-card p {
+            font-size: 0.88rem;
+            color: var(--text2);
+            line-height: 1.65;
+        }
+
+        /* ── Stats section ─────────────────────────────────── */
+        .stats-strip {
+            padding: 60px 24px;
+            text-align: center;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+            max-width: 700px;
+            margin: 40px auto 0;
+            flex-wrap: wrap;
+        }
+
+        .stat-item { text-align: center; }
+        .stat-item .num {
+            font-family: var(--font-head);
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent2), var(--green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .stat-item .lbl { color: var(--text2); font-size: 0.9rem; margin-top: 4px; }
+
+        /* ── CTA Banner ────────────────────────────────────── */
+        .cta-banner {
+            margin: 0 24px 80px;
+            max-width: 1000px;
+            margin: 0 auto 80px;
+            background: linear-gradient(135deg, rgba(108,99,255,0.2), rgba(16,185,129,0.1));
+            border: 1px solid rgba(108,99,255,0.3);
+            border-radius: var(--radius-lg);
+            padding: 60px;
+            text-align: center;
+        }
+
+        .cta-banner h2 { font-size: 2rem; margin-bottom: 16px; }
+        .cta-banner p  { color: var(--text2); margin-bottom: 32px; }
+
+        /* ── Footer ────────────────────────────────────────── */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 32px 24px;
+            text-align: center;
+            color: var(--text3);
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            .features-grid { grid-template-columns: 1fr; }
+            .cta-banner { padding: 40px 24px; }
+        }
+    </style>
+</head>
+<body>
+    <script src="utils/api.js"></script>
+    <script src="components/navbar.js"></script>
+    <script> renderNavbar('home'); </script>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-content">
+            <!-- <div class="hero-badge">🚀 College Project · Full Stack · SQLite + Node.js</div> -->
+            <h1>Track Every Rupee.<br><span class="highlight">Spend Smarter.</span></h1>
+            <p>SpendSmart is your personal finance companion — log expenses, visualise spending trends, get AI-style savings suggestions, and hit your monthly budget goals.</p>
+            <div class="hero-cta">
+                <a href="register.html"><button class="btn btn-primary btn-lg">Get Started Free</button></a>
+                <a href="login.html"><button class="btn btn-ghost btn-lg">Sign In →</button></a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features">
+        <div style="text-align:center;margin-bottom:48px;">
+            <h2 style="font-size:2rem;margin-bottom:12px;">Everything you need to take control</h2>
+            <p style="color:var(--text2);max-width:480px;margin:0 auto;">Built for students and young professionals who want financial clarity without the complexity.</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card fade-in">
+                <span class="feature-icon">📊</span>
+                <h3>Visual Analytics</h3>
+                <p>Interactive weekly and monthly charts powered by Chart.js. See exactly where your money goes at a glance.</p>
+            </div>
+            <div class="feature-card fade-in-2">
+                <span class="feature-icon">🏷️</span>
+                <h3>Smart Categories</h3>
+                <p>10 predefined categories — Food, Transport, Shopping, Health, and more — with colour-coded breakdowns.</p>
+            </div>
+            <div class="feature-card fade-in-3">
+                <span class="feature-icon">💡</span>
+                <h3>Savings Suggestions</h3>
+                <p>Get personalised tips based on your actual spending patterns. Know exactly where you can cut back.</p>
+            </div>
+            <div class="feature-card fade-in">
+                <span class="feature-icon">📜</span>
+                <h3>Transaction History</h3>
+                <p>Full filterable log of every transaction. Filter by category, date range, or search by name.</p>
+            </div>
+            <div class="feature-card fade-in-2">
+                <span class="feature-icon">🎯</span>
+                <h3>Budget Goals</h3>
+                <p>Set monthly budgets per category and track progress with visual indicators before you overspend.</p>
+            </div>
+            <div class="feature-card fade-in-3">
+                <span class="feature-icon">🔐</span>
+                <h3>Secure & Private</h3>
+                <p>JWT authentication with bcrypt password hashing. Your data stays yours — no third parties.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats -->
+    <!-- <section class="stats-strip">
+        <h2 style="font-size:1.8rem;">Built with production-grade tech</h2>
+        <div class="stats-row">
+            <div class="stat-item"><div class="num">Node.js</div><div class="lbl">Backend Runtime</div></div>
+            <div class="stat-item"><div class="num">SQLite</div><div class="lbl">Database</div></div>
+            <div class="stat-item"><div class="num">JWT</div><div class="lbl">Authentication</div></div>
+            <div class="stat-item"><div class="num">REST</div><div class="lbl">API Architecture</div></div>
+        </div>
+    </section> -->
+
+    <!-- CTA -->
+    <div style="padding:0 24px 40px; margin-top: 40px">
+        <div class="cta-banner">
+            <h2>Ready to take control of your finances?</h2>
+            <p>Join SpendSmart and start making smarter money decisions today.</p>
+            <a href="register.html"><button class="btn btn-primary btn-lg">Create Free Account →</button></a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2024 SpendSmart — A Full Stack College Project · Built with Node.js, Express, SQLite & vanilla JS</p>
+    </footer>
+</body>
+</html>

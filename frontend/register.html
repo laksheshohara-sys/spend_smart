@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register — SpendSmart</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        body { display: flex; flex-direction: column; min-height: 100vh; }
+
+        .auth-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-bg {
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse 70% 50% at 70% 30%, rgba(16,185,129,0.12) 0%, transparent 65%),
+                        radial-gradient(ellipse 60% 40% at 20% 80%, rgba(108,99,255,0.12) 0%, transparent 60%);
+        }
+
+        .auth-card {
+            position: relative; z-index: 1;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            width: 100%; max-width: 460px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .auth-logo {
+            font-family: var(--font-head); font-size: 1.6rem; font-weight: 800;
+            text-align: center; margin-bottom: 6px;
+            background: linear-gradient(135deg, var(--green), var(--accent2));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+
+        .auth-form { display: flex; flex-direction: column; gap: 16px; margin-top: 28px; }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+        .error-box {
+            background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+            border-radius: var(--radius-sm); color: #F87171;
+            padding: 10px 14px; font-size: 0.88rem; display: none;
+        }
+
+        .strength-bar { height: 4px; border-radius: 2px; background: var(--bg3); margin-top: 6px; overflow: hidden; }
+        .strength-fill { height: 100%; border-radius: 2px; transition: width 0.3s, background 0.3s; }
+
+        .password-wrapper { position: relative; }
+        .password-toggle {
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; color: var(--text3); cursor: pointer; font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <script src="utils/api.js"></script>
+    <script src="components/navbar.js"></script>
+    <script>
+        redirectIfLoggedIn();
+        renderNavbar('register');
+    </script>
+
+    <div class="auth-wrapper">
+        <div class="auth-bg"></div>
+        <div class="auth-card fade-in">
+            <div class="auth-logo">Create Account</div>
+            <p style="text-align:center;color:var(--text2);font-size:0.9rem;">Start tracking your expenses today</p>
+
+            <div class="error-box" id="error-box"></div>
+
+            <form class="auth-form" id="reg-form" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="name" class="input" placeholder="Riya Sharma" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="email" class="input" placeholder="riya@example.com" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Currency</label>
+                        <select id="currency" class="input">
+                            <option value="INR">₹ INR</option>
+                            <option value="USD">$ USD</option>
+                            <option value="EUR">€ EUR</option>
+                            <option value="GBP">£ GBP</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Monthly Budget</label>
+                        <input type="number" id="budget" class="input" placeholder="20000" min="0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="password" class="input"
+                            placeholder="Min 6 characters" required
+                            oninput="checkStrength(this.value)">
+                        <button type="button" class="password-toggle" onclick="togglePwd()">👁</button>
+                    </div>
+                    <div class="strength-bar">
+                        <div class="strength-fill" id="strength-fill" style="width:0%"></div>
+                    </div>
+                    <span id="strength-label" style="font-size:0.78rem;color:var(--text3)"></span>
+                </div>
+
+                <div class="form-group">
+                    <label>Confirm Password</label>
+                    <input type="password" id="confirm-password" class="input" placeholder="Repeat password" required>
+                </div>
+
+                <button type="submit" class="btn btn-success btn-lg btn-full" id="submit-btn">
+                    Create Account →
+                </button>
+            </form>
+
+            <p style="text-align:center;margin-top:20px;font-size:0.9rem;color:var(--text2);">
+                Already have an account?
+                <a href="login.html" style="color:var(--accent2);font-weight:600;">Sign in →</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function togglePwd() {
+            const p = document.getElementById('password');
+            p.type = p.type === 'password' ? 'text' : 'password';
+        }
+
+        function checkStrength(val) {
+            const fill  = document.getElementById('strength-fill');
+            const label = document.getElementById('strength-label');
+            let score = 0;
+            if (val.length >= 6)  score++;
+            if (val.length >= 10) score++;
+            if (/[A-Z]/.test(val)) score++;
+            if (/[0-9]/.test(val)) score++;
+            if (/[^A-Za-z0-9]/.test(val)) score++;
+
+            const levels = [
+                { w: '0%',   c: '', l: '' },
+                { w: '25%',  c: '#EF4444', l: '🔴 Weak' },
+                { w: '50%',  c: '#F97316', l: '🟠 Fair' },
+                { w: '75%',  c: '#F59E0B', l: '🟡 Good' },
+                { w: '100%', c: '#10B981', l: '🟢 Strong' }
+            ];
+            const lvl = levels[Math.min(score, 4)];
+            fill.style.width      = lvl.w;
+            fill.style.background = lvl.c;
+            label.textContent     = lvl.l;
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            const btn      = document.getElementById('submit-btn');
+            const errBox   = document.getElementById('error-box');
+            const name     = document.getElementById('name').value.trim();
+            const email    = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirm  = document.getElementById('confirm-password').value;
+            const currency = document.getElementById('currency').value;
+            const budget   = parseFloat(document.getElementById('budget').value) || 0;
+
+            errBox.style.display = 'none';
+
+            if (password !== confirm) {
+                errBox.textContent = 'Passwords do not match.';
+                errBox.style.display = 'block';
+                return;
+            }
+
+            btn.innerHTML = '<span class="spinner"></span> Creating account…';
+            btn.disabled  = true;
+
+            try {
+                await Auth.register({ name, email, password, currency, monthly_budget: budget });
+                showToast('Account created! Welcome to SpendSmart 🎉', 'success');
+                setTimeout(() => window.location.href = 'dashboard.html', 700);
+            } catch (err) {
+                errBox.textContent = err.message;
+                errBox.style.display = 'block';
+                btn.innerHTML = 'Create Account →';
+                btn.disabled  = false;
+            }
+        }
+    </script>
+</body>
+</html>
